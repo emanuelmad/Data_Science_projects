@@ -12,7 +12,7 @@ Aqui você encontra os *notebooks* dos meus projetos na área de Data Science, M
 ##Projetos
 Lista de Projetos em Cadernos Jupyter
 
-* ** Análise dos dados do Airbnb para cidade de Santiago, Chile: **https://bit.ly/36Oe0WN
+* ** Análise dos dados do Airbnb para cidade de Santiago, Chile:** https://bit.ly/36Oe0WN
 
 
 ---
