@@ -9,7 +9,7 @@ Possui graduação em Engenharia Florestal da Universidade Federal Rural de Pern
 
 Aqui você encontra os *notebooks* dos meus projetos na área de Data Science, Machine Learning e Deep Learning.
 
-#Projetos
+# Projetos
 
 * **Análise dos dados do Airbnb para cidade de Santiago, Chile:** https://bit.ly/36Oe0WN
 
