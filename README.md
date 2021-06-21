@@ -12,6 +12,7 @@ Aqui você encontra os *notebooks* dos meus projetos na área de Data Science, M
 # Projetos
 
 * **Análise dos dados do Airbnb para cidade de Santiago, Chile:** https://bit.ly/36Oe0WN
+* **Análise dos dados de Criminalidade para a cidade do Rio de Janeiro, Brasil:**https://bit.ly/2TOEsfm
 
 
 ---
