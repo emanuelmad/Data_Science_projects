@@ -1,0 +1,244 @@
+---
+title: "Amostragem Aleatória Simples"
+subtitle: "Laboratório de Sensoriamento Remoto"
+author: "Por Prof. Dr. Emanuel Araújo Silva"
+output:
+  html_document:
+    df_print: paged
+---
+
+## Introdução
+
+É o procedimento fundamental de seleção a partir do qual derivam os demais processos de amostragem (PÉLLICO NETO; BRENA, 1997; SANQUETTA et al., 2009). A Amostragem Aleatória Simples (AAS) baseia-se num processo estritamente aleatório, onde as unidades amostrais (UAs) são selecionadas com igual probabilidade (1/N), em que N é o nº total de unidades de amostras que compõem o espaço amostral, ou seja, a população amostrada (QUEIROZ, 1998).
+Estimadores da AAS
+As principais estimativas a serem obtidas para a AAS são:
+a) Média aritmética (x);
+b) Variância (sx2);
+c) Desvio Padrão (sx);
+d) Coeficiente de variação (CV%);
+e) Intensidade amostral (n);
+f) Variância da média (sx2);
+g) Erro padrão da média (sx);
+h) Erro de amostragem: absoluto (Ea) e relativo (Er);
+i) Intervalo de confiança para média (ICx);
+j) Total da população (X̂); e
+k) Intervalo de confiança para o total (ICX̂).
+```{r}
+# Carrega o pacote data.table para usar a função fread
+library(data.table)
+# Lê o arquivo CSV "Tectona.csv" e armazena em um data.frame chamado 'teca'
+IF <- fread("AAS.csv")
+# Imprime o data.frame 'teca' para visualização
+print(IF)
+```
+Obtendo as estatísticas básicas para as unidades amostrais:
+```{r}
+#média
+print(mean(IF$Volume))
+#Variância
+print(var(IF$Volume))
+#Desvio Padrão
+print(sd(IF$Volume))
+#Coeficiente de variação (CV%):
+print((sd(IF$Volume) / mean(IF$Volume)) * 100)
+```
+
+Intensidade amostral (n): A intensidade de amostragem é função: i) da variabilidade da variável de interesse (volume da floresta); ii) do erro de amostragem máximo admissível; e iii) do nível de confiança fixado (PÉLLICO NETO; BRENA, 1997). Assim, para obter a estimativa de n é necessário obter as seguintes informações:
+a) O valor de E (expectância do erro) - m3/parcela: Em inventário florestal é usual estabelecer um erro máximo admissível de 10% para estimativa da média. Então, para obter o valor de E basta fazer: 𝐸=(𝐿𝐸 . 𝑥)
+Uma função para obter o valor de E:
+```{r}
+# Define a função E para calcular o erro de amostragem
+E <- function(x){ 
+  # Calcula a média aritmética dos dados 'x'
+  media = mean(x) 
+  # Calcula o erro de amostragem (E) como 10% da média e arredonda para 4 dígitos significativos
+  E = signif(0.1*media, 4) 
+  # Retorna o valor calculado de E
+  return(E) 
+} 
+# Chama a função E com a coluna 'Volume' do data.frame IF
+E(IF$Volume)
+```
+
+O número de unidades amostrais possíveis na população (N): Quantas unidades de amostra de tamanho de 600 m² é possível estabelecer na população, cuja área total é de 400.000m² (40 hectares)? Para obter essa informação basta dividir a área da população pelo tamanho da parcela. Assim, obtêm-se que são possíveis 667 parcelas de 600m² na população. 𝑁=𝐴/𝑎
+Uma função para obter o valor de N:
+```{r}
+# Define a função N para calcular o número total de parcelas (N)
+N <- function(A, a){
+  # Calcula N arredondando para o próximo inteiro o resultado da divisão da área total (A) pela área de uma parcela (a)
+  N <- ceiling(A/a) 
+  # Retorna o valor calculado de N
+  return(N) 
+} 
+# Chama a função N com A = 400000 e a = 600
+N = N(400000, 600) 
+# Imprime o valor de N
+N
+```
+
+c) Determinar se a população é finita ou infinita: Para determinar o número de unidades de amostras necessárias para atender determinada precisão e nível de probabilidade é necessário saber, antecipadamente, se a população é Finita ou Infinita. Para tanto, inicialmente é preciso obter a fração de amostragem f e, em seguida, observar a convenção (PÉLLICO NETO; BRENA, 1997):
+{𝑆𝑒 1−𝑓≥0,98 População Infinita𝑆𝑒 1−𝑓<0,98 População Finita
+A fração de amostragem (f) é dada pela razão entre o número de unidades de amostra (n) e o número total de unidades de amostra possíveis na população (N) (PÉLLICO NETO; BRENA, 1997; SANQUETTA et al., 2014):
+𝑓=𝑛/𝑁
+Uma função para obter o Fator de Correção (FC) e constatar a natureza da população. O cálculo intermediário da fração de amostragem (f) é realizado e também retornado. A função FC recebe três parâmetros: x = vetor da variável de interesse; A = area da população; e a = tamanho da unidade de amostra. O valor de A e a devem estar na mesma unidade de medida.
+```{r}
+# Define a função FC para calcular o Fator de Correção (FC) e a fração da população amostrada (f)
+FC <- function(x, A, a){ 
+  # Calcula o número de observações na amostra (n) com base no tamanho de 'x'
+  n <- length(x) 
+  
+  # Calcula o número total de parcelas (N) arredondando para o próximo inteiro a divisão da área total (A) pela área de uma parcela (a)
+  N <- ceiling(A/a) 
+  
+  # Calcula a fração da população amostrada (f) como n/N
+  f <- n/N 
+  
+  # Calcula o Fator de Correção (FC) como 1 - f
+  FC <- 1-f 
+  
+  # Verifica se FC é maior ou igual a 0.98
+  if(FC >= 0.98){ 
+    # Imprime uma mensagem indicando que a população é considerada infinita
+    cat("A população é Infinita. Portanto, despreze o FC na fórmula da n.\n") 
+  }else{ 
+    # Imprime uma mensagem indicando que a população é finita
+    cat("A população é Finita. Portanto, use o FC para corrigir n.\n") 
+  }
+  
+  # Retorna uma lista contendo os valores de 'f' e 'FC'
+  return(list(f=f, FC=FC)) 
+} 
+
+# Chama a função FC com os valores da coluna 'Volume' do data.frame IF, A = 400000 e a = 600
+FC <- FC(x=IF$Volume, A=400000, a = 600)
+```
+
+Determinados os valores de E e N, e constatada a natureza finita da população, pode-se obter a intensidade de amostragem ideal em função da variância:
+```{r}
+# Define a função 'n' para calcular o tamanho de amostra necessário (n)
+n <- function(x, A, a){
+  
+  # Calcula o número total de parcelas (N) arredondando para o próximo inteiro a divisão da área total (A) pela área de uma parcela (a)
+  N <- ceiling(A/a)
+  
+  # Calcula o erro tolerável (E) como 10% da média aritmética das observações (x)
+  E = 0.1 * mean(x)
+  
+  # Calcula o valor crítico 't' da distribuição t-Student para um nível de confiança de 95%
+  t = qt(1 - .05 / 2, df = length(x) - 1)
+  
+  # Calcula o tamanho de amostra necessário (n) usando a fórmula Cochran
+  n <- ceiling((N * t^2 * var(x)) / (N * E^2 + t^2 * var(x)))
+  
+  # Imprime o tamanho de amostra necessário (n)
+  cat(paste("Para atender ao erro estabelecido você deve amostrar", n, "parcelas.\n"))
+  
+  # Verifica se o tamanho da amostra atual (length(x)) é suficiente
+  if(n <= length(x)){
+    # Se for suficiente, imprime uma mensagem indicando que o esforço amostral é satisfatório
+    cat("Esforço amostral satisfatório. O IF é definitivo!")
+  } else {
+    # Caso contrário, imprime uma mensagem indicando quantas parcelas adicionais são necessárias
+    cat(paste("Retorne a campo e meça mais", abs(length(x) - n), "parcelas."))
+  }
+}
+
+# Chama a função 'n' com os valores da coluna 'Volume' do data.frame IF, A = 400000 e a = 600
+n(x = IF$Volume, A = 400000, a = 600)
+```
+```{r}
+#cálculos estatísticos
+#Variância da média 
+var(IF$Volume)/length(IF$Volume)*(FC$FC)
+#Erro padrão da média (sx) 
+sbarx <- sd(IF$Volume)/sqrt(length(IF$Volume))*(sqrt(FC$FC)) 
+sbarx 
+#Erro de amostragem:
+Ea <- qt(1-.05/2, df=length(IF$Volume)-1)*sbarx 
+Ea
+#Erro de amostragem relativo (Er)
+Er <- Ea/mean(IF$Volume)*100 
+Er
+#Intervalo de confiança para média (ICx):
+# Limite inferior para média (LI) 
+LIbarx <- mean(IF$Volume)-Ea 
+LIbarx
+# Limite superior para média (LS) 
+LSbarx <- mean(IF$Volume)+Ea 
+LSbarx
+
+#Portanto, o IC para média é: ICx=[21,61 m3/parcela≤X≤26,05 m3/parcela]=95%.
+#Total da população: O volume estimado para o total da população é dado por:
+hatX <- N*mean(IF$Volume) 
+hatX
+
+#Intervalo de confiança para o total
+#Limite inferior para total da população (LI) 
+LIhatx <- hatX - N*Ea 
+LIhatx 
+#Limite superior para total da população (LS) 
+LShatx <- hatX + N*Ea 
+LShatx
+#Portanto, o IC para o total da população é: ICX̂=[14.409,8 m3≤X≤17.374,4 m3]=95%.
+```
+
+Observe que para melhor compreensão dos cálculos os parâmetros da AAS foram obtidos passo a passo. Porém, é possível obter todas as estimativas criando apenas uma única função no ambiente R. A seguir é apresentada uma função genérica para obter as estimativas da AAS. A função AAS recebe três parâmetros: x = vetor da variável de interesse; A = area da população; e a = tamanho da unidade de amostra. Internamente a função faz o cálculo do Fator de Proporcionalidade (FP) para obter os parâmetros estimados em hectare (ha):
+```{r}
+AAS <- function(x, A, a){ 
+  FP <- 10000/a 
+  x <- x*FP 
+  Soma <- sum(x) 
+  Media <- mean(x, na.rm = TRUE) 
+  Variancia <- var(x) 
+  N <- ceiling(A/a) 
+  f <- length(x)/N 
+  FC <- 1-f 
+  E = 0.1*mean(x) 
+  t = qt(1-.05/2, df=length(x)-1) 
+  
+  if(FC >= 0.98)
+    { cat("\n-------------------------------------------------------------\n A população é Infinita.\n") 
+    n <- ceiling((t^2*var(x))/E^2) 
+    cat("Para atender ao erro estabelecido você deve amostrar", n, "parcelas.\n") 
+    VarM <- var(x)/length(x) 
+    SdM <- sqrt(VarM) 
+    Ea <- t*SdM 
+    Er <- (Ea/Media)*100 
+    ICI <- Media - Ea
+    ICS <- Media + Ea 
+    TotPop <- N*Media 
+    ICIP <- ICI*A 
+    ICSP <- ICS*A 
+    
+    if(n <= length(x)){ 
+      cat("Esforço amostral satisfatório. O IF é definitivo!") 
+    }else{ 
+        cat("Retorne a campo e meça mais", abs(length(x)-n), "parcelas.") } 
+  }else{ 
+      cat("\n-------------------------------------------------------------\n") 
+    cat("A população é Finita -", "FC =",round(FC,3),"\n") 
+    n <- ceiling((N*t^2*var(x))/(N*E^2 + t^2*var(x))) 
+    cat("Para atender ao erro estabelecido você deve amostrar", n, "parcelas.\n") 
+    VarM <- var(x)/length(x)*FC 
+    SdM <- (sd(x)/sqrt(length(x)))*sqrt(FC) 
+    Ea <- t*SdM 
+    Er <- (Ea/Media)*100 
+    ICI <- Media - Ea 
+    ICS <- Media + Ea 
+    TotPop <- N*Media 
+    ICIP <- ICI*A 
+    ICSP <- ICS*A 
+    if(n <= length(x)){ 
+      cat("Esforço amostral satisfatório. O IF é definitivo!") 
+    }else{ 
+        cat("ATENÇÃO: Retorne a campo e meça mais", abs(length(x)-n), "parcelas.") 
+      } 
+  } 
+  cat("\n-------------------------------------------------------------\n") 
+  
+  df <- format(data.frame(Parametros= c("Soma", "Média", "Número de amostras possíveis", "Fração de amostragem", "Erro máximo admissível", "t-student", "Intensidade amostral", "Variância da média", "Erro padrão da Média", "Erro de amostragem absoluto", "Erro de amostragem relativo", "IC inferior para média", "IC superior para média", "Total da população", "IC inferior para total da população", "IC superior para total da população"), 
+      Estimativas=c(Soma, Media, N, f, E, t, n, VarM, SdM, Ea, Er, ICI, ICS, TotPop, ICIP, ICSP)), justify = "right", digits = 6, nsmall=3, scientific=FALSE) 
+  return(df) }
+AAS(x = IF$Volume, A = 400000, a = 600)
+```
+

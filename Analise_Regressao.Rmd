@@ -1,0 +1,121 @@
+---
+title: "Análise de Regressão"
+subtitle: "Laboratório de Sensoriamento Remoto"
+author: "Por Prof. Dr. Emanuel Araújo Silva"
+output:
+  html_document:
+    df_print: paged
+---
+
+## Introdução
+
+A regressão linear simples é utilizada para analisar relações entre variáveis contínuas (KENNEY & KEEPING, 1962). No R, para especificar um modelo é preciso usar a notação de fórmulas. Por exemplo, para um modelo de regressão com uma variável resposta Y (ou dependente) e uma variável preditora X (ou independente), a notação de fórmula a ser usada no R é: Y ~ X. O argumento ~ (til) significa em relação à. . . ou modelado por. ..(ou seja, Y em relação à X, ou Y modelado por X). Caso haja duas variáveis preditoras no modelo, a fórmula será: Y~X1+X2.
+```{r}
+# Carrega o pacote data.table para usar a função fread
+library(data.table)
+# Lê o arquivo CSV "Tectona.csv" e armazena em um data.frame chamado 'teca'
+teca <- fread("Tectona.csv")
+# Imprime o data.frame 'teca' para visualização
+print(teca)
+````
+
+## Gráficos de dispersão
+```{r}
+# Anexa o data.frame 'teca' para acessar suas colunas diretamente
+attach(teca)
+# Plota gráfico de dispersão para DAP e Volume
+plot(DAP, Volume, type = "p", xlab="DAP (cm)", ylab=expression(Volume~(m^3)))
+# Plota gráfico de dispersão para Altura e Volume
+plot(H, Volume, type = "p", xlab="Altura (m)", ylab=expression(Volume~(m^3)))
+# Desanexa o data.frame 'teca'
+detach(teca)
+````
+
+Ajustar os seguintes modelos volumétricos:
+ Berkhout: V=β0+β1 (DAP)V=β0+β1 (DAP)
+ Kopezky-Gerhardt: V=β0+β1 (DAP2)
+ Schumacher-Hall: lnV=β0+β1 (lnDAP)+β2 (lnH)
+```{r}
+# Ajuste de modelos
+# Ajusta o modelo de regressão linear para Berkhout
+Berkhout <- lm(Volume ~ DAP, data=teca)
+# Ajusta o modelo de regressão linear para Kopezky-Gerhardt
+KGerhardt <- lm(Volume ~ I(DAP^2), data=teca)
+# Ajusta o modelo de regressão linear para Schumacher-Hall
+SHall <- lm(log(Volume) ~ log(DAP) + log(H), data=teca)
+````
+
+Para obter informações mais detalhadas do ajuste pode-se usar a função summary(). A partir dessa função, os seguintes valores podem ser observados: Erro-Padrão (𝑠𝑥̅), Estimativas dos Coeficientes de Regressão (Valores de 𝛽), Erro-Padrão de Estimativa (𝑠𝑦𝑥), Coeficiente de Determinação (𝑅²) e Coeficiente de Determinação Ajustado (𝑅²𝑎𝑗.). Além disso, pode-se visualizar o teste F de significância global e o do(s) teste(s) t-Student para significância do(s) coeficiente(s) da regressão.
+```{r}
+# Resumo dos modelos
+# Mostra o resumo estatístico do modelo de Berkhout
+summary(Berkhout)
+# Mostra o resumo estatístico do modelo de Kopezky-Gerhardt
+summary(KGerhardt)
+# Mostra o resumo estatístico do modelo de Schumacher-Hall
+summary(SHall)
+````
+
+A função anova() permite obter a tabela de ANOVA da Regressão:
+```{r}
+# ANOVA da REGRESSÃO
+# Obtém a tabela de ANOVA para o modelo de Berkhout
+anova(Berkhout)
+# Obtém a tabela de ANOVA para o modelo de Kopezky-Gerhardt
+anova(KGerhardt)
+# Obtém a tabela de ANOVA para o modelo de Schumacher-Hall
+anova(SHall)
+````
+
+Pode-se visualizar a reta ajustada para o modelo de Berkhout (V=β0+β1 (DAP)V=β0+β1 (DAP)):
+```{r}
+# Reta da Regressão ajustada
+# Mostra a reta ajustada para o modelo de Berkhout
+plot(teca$Volume~teca$DAP, main="Berkhout", xlab="DAP (cm)", ylab = expression(Volume~(m^3)))
+abline(Berkhout, lty=2, col="red")
+
+# Obtém os valores preditos pelo modelo de Berkhout
+predict(Berkhout)
+
+# Obtém os valores dos resíduos do modelo de Berkhout
+residuals(Berkhout)
+````
+
+
+Análise de Resíduos
+Os resíduos da regressão linear devem ser avaliados quanto às pressuposições de normalidade, autocorrelação e homocedasticidade. O teste para normalidade dos resíduos pode ser realizado usado a função shapiro.test(). A autocorrelação pode ser detectada com uso da função durbinWatsonTest() e a heterocedasticidade dos resíduos com a função Breusch-Pagan().
+```{r}
+# Análise de resíduos
+# Teste de Shapiro-Wilk para normalidade dos resíduos
+shapiro.test(Berkhout$residuals)
+shapiro.test(KGerhardt$residuals)
+shapiro.test(SHall$residuals)
+
+# Teste Durbin-Watson para autocorrelação dos resíduos
+library(car)
+durbinWatsonTest(Berkhout)
+durbinWatsonTest(KGerhardt)
+durbinWatsonTest(SHall)
+
+# Teste Breusch-Pagan para heterocedasticidade dos resíduos
+library(lmtest)
+bptest(Berkhout)
+bptest(KGerhardt)
+bptest(SHall)
+
+
+#Plotar gráficos
+plot(Berkhout)
+plot(KGerhardt)
+plot(SHall)
+````
+
+
+A inexistência de multicolinearidade é outra importante pressuposição que deve ser analisada em modelos de regressão linear múltipla. O grau de confundimento entre variáveis preditoras pode ser verificado por meio da estatística Variance Inflation Factor – (VIF), que detecta problemas de multicolinearidade. É recorrente o uso de VIF > 10 como critério para afirmar a existência de multicolinearidade no modelo de regressão linear múltipla. Para obter o valor desse índice, pode-se usar a função vif() do pacote faraway (FARAWAY, 2016).
+```{r}
+# Multicolinearidade
+# Verifica a multicolinearidade através do VIF
+library(faraway)
+vif(SHall)
+````
+

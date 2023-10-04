@@ -1,0 +1,414 @@
+---
+title: "Visualização Gráfica no R"
+subtitle: "Laboratório de Sensoriamento Remoto"
+author: "Por Prof. Dr. Emanuel Araújo Silva"
+output:
+  html_document:
+    df_print: paged
+---
+O R é um poderoso software para edição de gráficos. Nesse livro iremos trabalhar com o pacote “graphics” já instalado no R base. A lista de argumentos utilizados na construção de gráficos pode ser acessada fazedo ?par() no console do R:
+Tipos de comandos: alto nível, baixo nível e interativos
+- Comandos de alto nível (criam gráficos completos)
+plot(); boxplot(); e hist().
+- Comandos de baixo nível (adicionam informações a algum gráfico já existente)
+points(); lines(); e title().
+- Comandos interativos (permitem que o usuário interaja com a janela gráfica)
+identify()
+
+Sintaxe
+plot(x, y, type = “”, main = “”, sub = “”, xlab = “”, ylab = “”, asp = “”….)
+```{r}
+library(data.table) 
+teca <- fread("Tectona.csv") 
+print(teca)
+```
+
+Inicialmente, uma análise exploratória do conjunto de dados:
+```{r}
+str(teca) # estrutura do conjunto de dados 
+dim(teca) # dimensão do conjunto de dados 
+summary(teca) # um rápido sumário estatístico
+```
+
+Criando um gráfico de dispersão entre diâmetro (cm) e altura (m). O default da função plot() é usar type = “p”. No entanto outros tipos de plotagem (type) estão disponíveis. O argumento type pode assumir: (“p” = points, “l” = lines, “b” = both, “c” = lines part alone of “b”, “o” = ‘overplotted’, “h” = ‘histogram’, “s” = stair steps, “S” = other steps, “n” = no plotting).
+```{r}
+#Modificando o tipo de gráfico (type)
+plot(teca$DAP, teca$V, main = "type = default") 
+plot(teca$DAP, teca$V, type="l", main = "type = l") 
+plot(teca$DAP, teca$V, type="b", main = "type = b") 
+plot(teca$DAP, teca$V, type="o", main = "type = o")
+```
+
+
+Adicionando título, subtítulo e rótulos
+Usar os comandos main e sub para adicionar um título e subtítulo ao gráfico. Para modificar os títulos dos eixos usar os comandos xlab = “Título do eixo x” e ylab = “Título do eixo y”.
+```{r}
+#Adicionando título, subtítulo e rótulos
+plot(teca$DAP, teca$V, type = "o", main = "Relação DAP-Volume") 
+plot(teca$DAP, teca$V, type = "o", main = "Relação DAP-Volume", sub = "(Árvores de Tectona grandis)") 
+plot(teca$DAP, teca$V, type = "o", main = "Relação DAP-Volume", xlab = "DAP (cm)") 
+plot(teca$DAP, teca$V, type = "o", main = "Relação DAP-Volume", xlab = "DAP (cm)", ylab = expression(Volume ~ (m^3)))
+```
+
+Modificando tipos de pontos (pch)
+Pode-se alterar o tipo de ponto usando o comando pch, que recebe um valor numérico que define o tipo de ponto plotado no gráfico.
+```{r}
+#Modificando tipos de pontos (pch)
+plot(teca$DAP, teca$V, pch=0, main = "pch=0") 
+plot(teca$DAP, teca$V, pch=4, main = "pch=4") 
+plot(teca$DAP, teca$V, pch=17, main = "pch=17 (triângulo sólido)")
+plot(teca$DAP, teca$V, pch="M", main = "pch=M") 
+plot(teca$DAP, teca$V, pch="T", main = "pch=T") 
+plot(teca$DAP, teca$V, pch="1", main = "pch=1 (entre aspas)")
+```
+
+Modificando tipos de linhas (lty)
+Pode-se alterar o tipo de linha usando o comando lty, que assume um valor numérico que varia de 0 a 6.
+```{r}
+#Modificando tipos de linhas (lty)
+plot(teca$DAP, teca$V, type="l", main = "default (solid)")
+plot(teca$DAP, teca$V, type="l", lty=0, main = "sem linha") 
+plot(teca$DAP, teca$V, type="l", lty=2, main = "dashed") 
+plot(teca$DAP, teca$V, type="l", lty=4, main = "dotdash") 
+plot(teca$DAP, teca$V, type="l", lty=5, main = "longdash") 
+plot(teca$DAP, teca$V, type="l", lty=6, main = "twodash")
+```
+
+Modificando a largura das linhas (lwd)
+Pode-se alterar a largura da linha usando o comando lwd, que assume sempre um valor numérico positivo maior ou igual a 1.
+```{r}
+#Modificando a largura das linhas (lwd)
+plot(teca$DAP, teca$V, type="l", lty=2, main = "default") 
+plot(teca$DAP, teca$V, type="l", lty=2, lwd=2, main = "lwd=2") 
+plot(teca$DAP, teca$V, type="l", lty=2, lwd=4, main = "lwd=4") 
+plot(teca$DAP, teca$V, type="l", lty=2, lwd=15, main = "lwd=15")
+```
+
+Modificando cores de pontos e linhas (col)
+Pode-se alterar a cor das linhas e pontos. Basta usar o comando col e especificar entre aspas a cor desejada. A função colors() fornece uma variedade de cores disponíveis para uso. Utilize a função demo(“colors”) para visualizar uma demostração de cores.
+```{r}
+#Modificando cores de pontos e linhas (col)
+head(colors(), 40) 
+length(colours()) 
+plot(teca$DAP, teca$V, pch=0, col="red", main = "col = red") 
+plot(teca$DAP, teca$V, pch=15, col="lightblue", main = "col = lightblue")
+plot(teca$DAP, teca$V, type="l", lty=2, lwd=4, col="yellow", main = "col = yellow") 
+plot(teca$DAP, teca$V, type="l", lty=2, lwd=2, col="green3", main = "col = green3")
+```
+
+Modificando cores do título e eixos (col.main, col.lab e col.axis)
+Podem-se alterar as cores do título e labels dos eixos x e y usando os comandos col.main e col.lab. O comando col.axis pode ser usado para modificar as cores dos valores dos eixos. Além disso, existem comandos de baixo nível que realizam as mesmas tarefas: title().
+```{r}
+#Modificando cores do título e eixos (col.main, col.lab e col.axis)
+plot(teca$DAP, teca$V, type="o", main="Relação DAP-Volume", xlab="DAP (cm)",
+     ylab=expression(Volume ~ (m^3)), 
+     col.main="red4") 
+plot(teca$DAP, teca$V, type="o", main="Relação DAP-Volume", xlab="DAP (cm)",
+     ylab=expression(Volume ~ (m^3)), 
+     col.main="red4", col.lab="orange3")
+plot(teca$DAP, teca$V, type="o", main="Relação DAP-Volume", xlab="DAP (cm)",
+     ylab=expression(Volume ~ (m^3)), 
+     col.main="red4", col.lab="orange3", col.axis="green4")
+plot(teca$DAP, teca$V, type="o", xlab="", ylab="") 
+title("Relação DAP-Volume", 
+      col.main="purple", 
+      xlab="DAP (cm)", ylab=expression(Volume ~ (m^3)), col.lab="green4")
+```
+
+Modificando os limites dos eixos (xlim, ylim e axis)
+Podem-se alterar os limites dos eixos (mínimos e máximos) usando os comandos xlim e ylim. Além disso, o comando axis pode ser usado para obter uma maior personalização dos eixos. Porém, no plot original deve constar axis = FALSE.
+```{r}
+#Modificando os limites dos eixos (xlim, ylim e axis)
+plot(teca$DAP, teca$V, pch=0, col="red", xlim=c(0, 40), ylim=c(0, 0.8),
+     main="xlim=c(0, 40) e ylim=c(0, 0.8)") 
+plot(teca$DAP, teca$V, pch=0, col="red", xlim=c(6, 30), ylim=c(0, 0.8),
+     main="xlim=c(6, 30) e ylim=c(0, 0.8)") 
+plot(teca$DAP, teca$V, pch=0, col="red", xlim=c(5, 18), ylim=c(0, 0.5),
+     main="xlim=c(5, 18) e ylim=c(0, .5)")
+plot(teca$DAP, teca$V, pch=0, col="red", xlim=c(min(teca$DAP), max(teca$DAP)),
+     ylim=c(min(teca$V), max(teca$V)), main="xlim=c(min, max) e ylim=c(min, max)") 
+plot(teca$DAP, teca$V, pch=0, col="red", axes=F)
+axis(1, seq(from = round(min(teca$DAP),2), 
+            to = round(max(teca$DAP),2), 
+            by = 2)) 
+axis(2, seq(from = round(min(teca$V),2), 
+            to = round(max(teca$V),2), 
+            by = 0.1))
+```
+
+Modificando as bordas dos gráficos (bty)
+Pode-se alterar o estilo de borda do gráfico usando o comando bty. As opções disponíveis são: bty =“o”, “l”, “7”, “c”, “u”, “]”. Também pode ser o usado o comando box( ) após a chamada do gráfico.
+```{r}
+#Modificando as bordas dos gráficos (bty)
+plot(teca$DAP, teca$V, pch=0, col="red", bty="o", main="bty = o (default")
+plot(teca$DAP, teca$V, pch=0, col="red", bty="l", main="bty = l")
+plot(teca$DAP, teca$V, pch=0, col="red", bty="7", main="bty = 7")
+plot(teca$DAP, teca$V, pch=0, col="red", bty="c", main="bty = c")
+plot(teca$DAP, teca$V, pch=0, col="red", bty="u", main="bty = u")
+plot(teca$DAP, teca$V, pch=0, col="red", bty="]", main="bty = ]")
+plot(teca$DAP, teca$V, pch=0, col="red", main="Função = box()")
+box(which="plot", lty=2, bty ="l", lwd=5)
+```
+
+Modificando o comprimento e a direção dos marcadores de eixos (tcl)
+```{r}
+#Modificando o comprimento e a direção dos marcadores de eixos (tcl)
+plot(teca$DAP, teca$V, main = "type = default")
+plot(teca$DAP, teca$V, type="l", main = "type = l") 
+plot(teca$DAP, teca$V, type="b", main = "type = b") 
+plot(teca$DAP, teca$V, type="o", main = "type = o")
+```
+
+Modificando a orientação dos valores nos eixos (las)
+```{r}
+#Modificando a orientação dos valores nos eixos (las)
+plot(teca$DAP, teca$V, pch=0, las=0, main="paralelos aos eixos") 
+plot(teca$DAP, teca$V, pch=0, las=1, main="sempre horizontais") 
+plot(teca$DAP, teca$V, pch=0, las=2, main="perpendiculares aos eixos")
+plot(teca$DAP, teca$V, pch=0, las=3, main="sempre verticais")
+```
+
+Modificando o tamanho dos pontos (cex)
+```{r}
+#Modificando o tamanho dos pontos (cex)
+plot(teca$DAP, teca$V, pch=0, main="cex = 1 (default)") 
+plot(teca$DAP, teca$V, pch=0, cex=0.5, main="cex = 0.5") 
+plot(teca$DAP, teca$V, pch=0, cex=1.5, main="cex = 1.5") 
+plot(teca$DAP, teca$V, pch=0, cex=3, main="cex = 3")
+```
+
+Modificando o tamanho do título, valores e labels dos eixos (cex.main, cex.axis e cex.lab)
+
+```{r}
+#Modificando o tamanho do título, valores e labels dos eixos (cex.main, cex.axis e cex.lab)
+plot(teca$DAP, teca$V, pch=0, main="default") 
+plot(teca$DAP, teca$V, pch=0, main="Relação DAP-Volume", cex.main=1.5)
+plot(teca$DAP, teca$V, pch=0, main="Relação DAP-Volume", cex.main=2)
+plot(teca$DAP, teca$V, pch=0, cex.axis=.5, main="cex.axis = .5") 
+plot(teca$DAP, teca$V, pch=0, cex.axis=1.5, main="cex.axis = 1.5")
+plot(teca$DAP, teca$V, pch=0, xlab="DAP (cm)",cex.lab=.5, main="cex.lab = .5")
+plot(teca$DAP, teca$V, pch=0, xlab="DAP (cm)",cex.lab=1.5, main="cex.lab = 1.5") 
+
+#Usando o comando title( ) 
+plot(teca$DAP, teca$V, pch=0, xlab="") 
+title(main="Relação DAP-Volume", cex.main=2, xlab="DAP (cm)", cex.lab=1.5)
+```
+
+A função hist()
+A função genérica hist() gera um histograma para o conjunto de dados fornecidos. Caso a especificação seja plot = TRUE (default), um histograma é plotado. Do contrário, se plot = FALSE a função apenas calcula internamente todos os parâmetros de hist(). Você pode acessar os argumentos da função fazendo: ?hist ou ?plot.histogram.
+hist(x, breaks = “Sturges”, nrow, freq = NULL, include.lowest = TRUE, right = TRUE, col = NULL, border = NULL, main = “Histogram of”, xlim = range(breaks), ylim = NULL, xlab, ylab, axes = TRUE, right = TRUE)
+x = conjunto de dados;
+breaks = define os intervalos da classe - pode ser uma função, vetor, número;
+freq = se TRUE = frequência (contagem), FALSE = densidade (probabilidade);
+include.lowest = incluir o menor valor no intervalo definido pelo break;
+col e border = cores das barras e das bordas; main = Título do gráfico;
+xlim e ylim = limites dos eixos;
+xlab e ylab = título dos eixos;
+axes = se axes = TRUE os eixos são desenhados; e
+right = se right = TRUE intervalo aberto a esquerda.
+```{r}
+#Histograma
+hist(teca$DAP, main="default") 
+rug(teca$DAP) #Adiciona a quantidade de observações dentro do intervalo de classes, representado pelas linhas dispostas abaixo das barras do histograma
+```
+
+Modificando o intervalo das classes
+```{r}
+#Modificando o intervalo das classes
+hist(teca$DAP, right = TRUE); rug(teca$DAP) 
+hist(teca$DAP, right = FALSE); rug(teca$DAP)
+#Outro exemplo 
+x <- c(2,2,2,3,4,4,5,6,7,7,7,8) 
+hist(x, right=TRUE) 
+hist(x, right=FALSE)
+hist(x, right = TRUE, include.lowest = TRUE) #Mensagem de aviso, pois falta o argumento breaks 
+hist(x, right = TRUE, include.lowest = FALSE) 
+## Warning in hist.default(x, right = TRUE, include.lowest = FALSE): 
+## 'include.lowest' ignored as 'breaks' is not a vector 
+hist(x, right = TRUE, include.lowest = FALSE, breaks=1:8) #Intervalo entre as classes
+```
+
+Modificando os breaks (intervalos de classe)
+```{r}
+#Modificando os breaks (intervalos de classe)
+hist(teca$DAP, col="red4", probability = TRUE) 
+hist(teca$DAP, col="red4", probability = TRUE, 
+     breaks = c(c(0,5), c(5,10), c(10,15), c(15,20), c(20,25), c(25,30), c(30,35)), 
+     ylim=c(0,0.06)) #Os breaks indicam que o gráfico deve ter classes de 0 até 5, 5 até 10, 10 até 15 e assim por diante
+```
+
+Parâmetros do histograma
+```{r}
+#Parâmetros do histograma
+hist <- hist(teca$DAP)
+hist$breaks # breakpoints (Regra de Sturges). 
+## [1] 5 10 15 20 25 30 35 
+hist$counts # frequência absoluta em cada classe. 
+## [1] 6 10 9 4 0 1 
+hist$mids # ponto médio das classes. 
+## [1] 7.5 12.5 17.5 22.5 27.5 32.5 
+hist$density 
+## [1] 0.040000000 0.066666667 0.060000000 0.026666667 0.000000000 0.006666667
+```
+
+Modificando as cores das colunas e bordas (col e border)
+```{r}
+#Modificando as cores das colunas e bordas (col e border)
+hist(teca$DAP, col="red4") 
+hist(teca$DAP, col="green") 
+hist(teca$DAP, col="red4") 
+hist(teca$DAP, col="red4", border="blue")
+```
+
+Mostrando as probabilidades (density)
+```{r}
+#Mostrando as probabilidades (density)
+hist(teca$DAP) 
+hist(teca$DAP, probability = TRUE) # density = 0 a 1
+```
+
+Número de classes (nc)
+```{r}
+#Número de classes (nc)
+hist(teca$DAP, main = "nc = Sturges") 
+hist(teca$DAP, nc = 10, main = "nc = 10")
+hist(teca$DAP, nc = 6, main = "nc = 6") 
+hist(teca$DAP, nc = 3, main = "nc = 3")
+```
+
+A função pie() (setores)
+A função genérica pie() pode ser usada para construir um gráfico de setores. Para saber mais sobre a função faça: ?pie. Os principais argumentos da função são: labels = vetor contendo os rótulos de cada fatia; radius = raio da circunferência do gráfico (default=1); e col = vetor contendo as cores de cada fatia. A seguir um gráfico de setores é construído a partir de um data frame com as contagens já disponíveis:
+```{r}
+#A função pie() (setores)
+df <- data.frame( 
+  especie = c("Araucaria", "Acapu", "Mogno", "Ipe"), 
+  contagem = c(15, 30, 10, 20)) 
+print(df)
+pie(df$contagem, labels = df$especie, main="")
+```
+
+Usando a função table()
+Para obter contagens de fatores pode-se usar a função table(). Vamos obter uma tabela de contagem para o conjunto de dados iris. Quantas flores existem de cada espécie (setosa, virginica e versicolor)?
+```{r}
+#Usando a função table()
+table(iris$Species) 
+## setosa versicolor virginica 
+## 50 50 50 
+pie(table(iris$Species))
+```
+
+Modificando cores (col)
+```{r}
+#Modificando cores (col)
+#Um esquema de cores
+pie(rep(1, 24), col = rainbow(24), radius = 1)
+#Modificando a cor das fatias
+pie(table(iris$Species),col = c("purple", "violetred1", "green3"))
+pie(table(iris$Species),col = gray(seq(0.4, 1.0, length = 6))) #Níveis de cinza
+
+#Modificando o sentido do desenho das fatias (horário e anti-horário)
+pie(table(iris$Species), col = c("purple", "violetred1", "green3"), clockwise = TRUE) 
+pie(table(iris$Species), col = c("purple", "violetred1", "green3"), clockwise = FALSE)
+
+#Modificando o tamanho do gráfico (radius)
+pie(table(iris$Species), radius=0.3, col = c("purple", "violetred1", "green3"),
+    main = "radius=0.3") 
+pie(table(iris$Species), radius=0.5, col = c("purple", "violetred1", "green3"),
+    main = "radius=0.5") 
+pie(table(iris$Species), radius=0.7, col = c("purple", "violetred1", "green3"),
+    main = "radius=0.7") 
+pie(table(iris$Species), radius=1, col = c("purple", "violetred1", "green3"),
+    main = "radius=1")
+```
+
+A função boxplot()
+A função boxplot() pode ser usada para obter um gráfico de boxplot, também chamado de “gráfico de caixa”. A seguir serão feitos gráficos boxplot para cada espécie de iris, para as variáveis ‘Sepal.Width’ e ‘Petal.Width’. Os argumentos da função boxplot são inseridos y~x, diferente dos gráficos mostrados anteriormente, sendo x uma variável categórica.
+```{r}
+#Boxplot
+boxplot(Sepal.Width ~ Species, data=iris) 
+boxplot(Petal.Width ~ Species, data=iris)
+
+#Modificando as cores das caixas (col)
+boxplot(Sepal.Width~Species, data=iris, col=c("red4", "green", "blue"))
+
+#Plotando os outliers (outline)
+boxplot(Petal.Length ~ Species, data=iris, col=c("red4", "green", "blue"), outline=TRUE) 
+boxplot(Petal.Length ~ Species, data=iris, col=c("red4", "green", "blue"), outline=FALSE)
+
+#Alterando a orientação (horizontal)
+boxplot(Petal.Length~Species, data=iris, col=c("red4", "green", "blue"), outline=FALSE, horizontal=FALSE) 
+boxplot(Petal.Length~Species, data=iris, col=c("red4", "green", "blue"), outline=FALSE, horizontal=TRUE)
+
+#Inserindo a variação dentro da caixa do boxplot (varwidth)
+#O commando varwith( ) dimensiona o tamanho das caixas de acordo com o número de observações em cada fator. É um bom argumento para ser usado demostrar a variação de observações entre tratamentos, locais ou espécies.... 
+boxplot(Sepal.Width~Species, data=iris, col=c("red4", "green", "blue"), outline=TRUE, varwidth=FALSE) 
+boxplot(Sepal.Width~Species, data=iris, col=c("red4", "green", "blue"), outline=TRUE, varwidth=TRUE)
+```
+
+Adicionando “elementos” a um gráfico existente
+```{r}
+#Adicionando pontos (points())
+plot(teca$DAP, teca$V, pch=19) 
+points(rev(teca$DAP), teca$V, col="red", pch=10)
+```
+
+
+Adicionando linhas (lines())
+O comando lines() é muito usado para adicionar a linha de ajuste de regressão linear simples.
+```{r}
+#Adicionando linhas (lines())
+plot(teca$DAP, teca$V, pch=19) 
+lines(teca$DAP, teca$V*1.5, col="red4") 
+lines(teca$DAP, teca$V/2, col="blue")
+```
+
+Adicionando retas (ablines())
+```{r}
+#Modificando o intervalo das classes
+plot(teca$DAP, teca$V, pch=19) 
+# x = intercepto e y = beta 1 
+abline(lm(teca$V ~ teca$DAP)$coefficients[1], lm(teca$V ~ teca$DAP)$coefficients[2], 
+       col="red", lwd=2, lty=1) 
+#A função “lm” será trabalhada mais adiante aqui ela foi usada apenas como ilustração
+abline(h=.4, col="red4")
+abline(h=.2, col="red4", lwd=4)
+# Reta horizontal passando por y=200 na cor vermelha 
+abline(v=10, col="yellow", lty=3, lwd=5) 
+# Reta vertical amarela x=10, pontilhada e largura de 5 
+abline(v=10, col="red", lty=3, lwd=1) 
+# Ficou na frente da linha anterior
+```
+
+Adicionando texto (text())
+```{r}
+#Adicionando texto (text())
+plot(teca$DAP, teca$V, pch=19) 
+text(10,0.6, "Tectona grandis") 
+text(16,0.5, "R para floresta")
+```
+ 
+Múltiplos gráficos na mesma janela
+```{r}
+# Múltiplos gráficos na mesma janela
+# Duas linhas e duas colunas 
+op <- par(mfrow = c(2,2)) #Preenchimento por linha 
+plot(teca$DAP, teca$V, pch=14, col="green")
+plot(teca$DAP, teca$V, type="l", lty=5, lwd=4) 
+boxplot(Sepal.Length ~ Species, data=iris, col="blue4")
+hist(teca$H, nc=5, col= "orange") 
+par(op) #Utiliza esse argumento para finalizar o comando par, ou seja, para que os próximos gráficos a serem feitos não apareçam em uma janela gráfica com vários gráficos
+
+plot(teca$DAP, teca$H, pch=14) #Janela gráfica com um gráfico apenas
+```
+
+Configurando as margens da janela gráfica
+```{r}
+#Configurando as margens da janela gráfica
+# Margens - mar(bottom, left, top, right) 
+op <- par(mfrow=c(2,2), mar = c(4.5,3,1,1)) 
+plot(teca$DAP, teca$V, pch=14) 
+plot(teca$DAP, teca$V, pch=20) 
+plot(teca$DAP, teca$V, type="l", lty=2, col="blue4") 
+hist(teca$DAP, nc=5) 
+par(op) #A unidade das margens são polegadas (inches)
+```

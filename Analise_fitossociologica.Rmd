@@ -1,0 +1,210 @@
+---
+title: "Análise Fitossociológica"
+subtitle: "Laboratório de Sensoriamento Remoto"
+author: "Por Prof. Dr. Emanuel Araújo Silva"
+output:
+  html_document:
+    df_print: paged
+---
+
+Estrutura Horizontal
+A análise fitossociológica da floresta abrange a estimativa de diversos parâmetros. Os parâmetros fitossociológicos da estrutura horizontal podem ser expressos, em valores absolutos e relativos (MUELLER-DOMBOIS; ELLENBERG, 1974). Os principais parâmetros fitossociológicos da estrutura horizontal são (MUELLER-DOMBOIS; ELLENBERG, 1974; SANQUETTA et al., 2014; SOUZA; SOARES, 2013):
+1. Densidade absoluta (DAi) da i-ésima espécie, em número de indivíduos por hectare, por espécie;
+2. Densidade relativa (DRi) da i-ésima espécie, em porcentagem;
+3. Dominância absoluta (DoAi) da i-ésima espécie (m2.ha-1);
+4. Dominância relativa (DoRi) da i-ésima espécie, em porcentagem;
+5. Frequência absoluta (FAi) da i-ésima espécie, em porcentagem;
+6. Frequência relativa (FRi) da i-ésima espécie, em porcentagem;
+7. Valor de cobertura (VCi) da i-ésima espécie, em porcentagem;
+8. Porcentagem de cobertura (PCi) da i-ésima espécie;
+9. Valor de importância (VIi) da i-ésima espécie, em porcentagem; e
+10. Porcentagem de importância (PIi) da i-ésima espécie.
+
+A seguir os principais parâmetros fitossociológicos da estrutura horizontal serão obtidos usando a linguagem R. Os dados foram obtidos de parcelas permanentes instaladas em Floresta Ombrófila Mista (FOM), com nível de inclusão de 10cm (DAP ≥ 10 cm). Foram estabelecidas 3 parcelas de 1000 m² (0.1 ha), com área total amostra (A) de 0.3 ha. Para fins didáticos, serão apresentados os códigos para obter os parâmetros da estrutura horizontal da espécie Araucaria angustifolia e, em seguida, mostrar-se-á um código para obter os parâmetros de todas as espécies de uma só vez usando o pacote data.table para manipulação de dados (DOWLE; SRINIVASAN, 2017):
+
+```{r}
+library("data.table") # Pacote para manipulação de dados 
+FOM <- fread("Fito.csv") # Carrega o conjunto de dados 
+print(FOM)
+```
+Inicialmente, pode-se fazer uma breve inspeção dos dados:
+```{r}
+nrow(FOM)
+names(FOM) 
+dim(FOM) 
+# n = Número total de indivíduos amostrados na j-ésima parcela 
+FOM[, .(n=.N), by=Parcela][]
+```
+
+```{r}
+# Número de indivíduos amostrados da i-ésima espécie na j-ésima parcela 
+FOM[, .(ni=.N), by=c("Parcela", "Especie")]
+```
+Plotar Gráfico 
+```{r}
+# Carrega os pacotes necessários
+library("ggplot2")
+
+# Calcula o número total de indivíduos para cada parcela
+FOM_total <- FOM[, .(n = .N), by = Parcela]
+
+# Calcula o número de indivíduos para cada espécie em cada parcela
+FOM_individual <- FOM[, .(ni = .N), by = c("Parcela", "Especie")]
+
+# Plotando o gráfico
+ggplot(FOM_individual, 
+       aes(x = Especie, y = ni, fill = Especie)) +
+  geom_bar(stat = "identity", position = "dodge", width = 1, colour = "black") +
+  geom_text(aes(label = ni), hjust = -0.3, vjust = 0.5, position = position_dodge(width = 0.9)) +
+  facet_grid(~ Parcela, labeller = as_labeller(c(`1` = "Parcela 1", `2` = "Parcela 2", `3` = "Parcela 3"))) +
+  coord_flip() +
+  theme_bw() +
+  theme(
+    axis.line.x = element_line(size = 0.5, colour = "black"),
+    axis.line.y = element_line(size = 0.5, colour = "black"),
+    strip.text.x = element_text(colour = 1, size = 12, family = "serif", face = "bold"),
+    strip.background = element_rect(colour = "black", fill = "snow2"),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    panel.border = element_rect(color = "black"),
+    panel.background = element_blank(),
+    axis.text.x = element_text(colour = "black", size = 12, family = "serif", angle = 0),
+    axis.text.y = element_text(colour = 1, size = 12, family = "serif", face = "italic"),
+    legend.position = "none"
+  ) +
+  scale_x_discrete(name = "Espécie") +
+  scale_y_continuous(name = "Número de indivíduos", limits = c(0, 8))
+```
+Obtendo os parâmetros fitossociológicos da estrutura horizontal:
+1. Densidade absoluta (DAi): Para obter a DAi é necessário o conhecimento do número de individuos amostrados da i-ésima espécie (ni) e da área total amostra (A):
+- Araucaria angustifolia
+```{r}
+DAi <- function(x, A){ 
+  ni <- nrow(subset(FOM, Especie=="Araucaria angustifolia")) 
+  DAi <- ni/A 
+  return(DAi) 
+  } 
+DAi(x = FOM$Especie, A = 0.3)
+```
+Densidade relativa (DRi): Para obter a densidade relativa de cada espécie basta usar a fórmula abaixo. Em que: s = número total de espécies observadas.
+- Araucaria angustifolia
+```{r}
+DRi <- function(x, A){ 
+  ni <- nrow(subset(FOM, Especie=="Araucaria angustifolia")) 
+  DAi <- ni/A 
+  DTA <- length(x)/A 
+  DRi <- (DAi/DTA)*100 
+  return(DRi) 
+  } 
+DRi(x = FOM$Especie, A = 0.3)
+```
+Dominância absoluta (DoAi) - m2.ha-1: Para obter a dominância absoluta é necessário o cálculo prévio das áreas transversais (gj) da j-ésima árvore. Em seguida, a área basal da espécie (Gi) é obtida pela soma das gj para cada espécie. Por fim, a DoAi da i-ésima espécie é calculada pela razão da Gi pela área total amostrada (A):
+- Araucaria angustifolia
+```{r}
+DoAi <- function(data, A, ...){ 
+  data <- data[Especie=="Araucaria angustifolia"] 
+  gi <- data[, .(gi=pi*DAP^2/40000)] 
+  Gi <- sum(gi) 
+  DoAi <- Gi/A 
+  return(DoAi) 
+  } 
+DoAi(data=FOM, A=0.3)
+```
+Dominância relativa (DoRi): A dominância relativa da i-ésima espécie é calculada pela razão da dominância absoluta de cada espécie (DoAi) pela dominância total (soma dos valores de DoAi para cada espécie). Alternativamente, pode-se fazer a razão da área basal da i-ésima espécie (Gi) pela soma das áreas basais de todas as espécies amostradas (GT):
+- Araucaria angustifolia
+```{r}
+DoRi <- function(data, A, ...){ 
+  Gt <- data[, .(gi=pi*DAP^2/40000)] 
+  data <- data[Especie=="Araucaria angustifolia"] 
+  gi <- data[, .(gi=pi*DAP^2/40000)] 
+  Gi <- sum(gi) 
+  DoAi <- Gi/A 
+  DoRi <- (Gi/sum(Gt))*100 
+  return(DoRi) 
+  } 
+DoRi(data=FOM, A=0.3)
+```
+Frequência absoluta (FAi): A frequência absoluta de cada espécie é calculada pela razão do número de unidades de amostras (Ui) onde foram encontradas a i-ésima espécie e o número total de unidades de amostras (UT). Pode-se multiplicar por 100 para obter o parâmetro relativizado:
+- Araucaria angustifolia
+```{r}
+FAi <- function(data, ...){ 
+  Ut <- length(unique(data$Parcela)) 
+  Ui <- unique(data, by=c("Especie", "Parcela"))[, .(Ui=.N), by="Especie"]
+  Ui <- Ui[Especie=="Araucaria angustifolia", Ui] 
+  FAi <- (Ui/Ut)*100 
+  return(FAi) 
+  } 
+FAi(data=FOM)
+```
+Frequência relativa (FRi): A frequência relativa da i-ésima espécie é calculada pela razão da frequência absoluta de cada espécie (FAi) pela frequência total (soma dos valores de FAi para cada espécie):
+- Araucaria angustifolia
+```{r}
+FRi <- function(data, ...){ 
+  Ut <- length(unique(FOM$Parcela)) 
+  Ui <- unique(FOM, by=c("Especie", "Parcela"))[, .(Ui=.N), by="Especie"] 
+  FAi <- Ui[, .(FAi=(Ui/length(unique(FOM$Parcela)))*100)]
+  Ui_AA <- Ui[Especie=="Araucaria angustifolia", Ui] 
+  FAi_AA <- (Ui_AA/Ut)*100 
+  FRi <- (FAi_AA /sum(FAi))*100 
+  return(FRi) 
+  } 
+FRi(data=FOM)
+```
+
+Valor de cobertura (VCi): O valor de cobertura integra os parâmetros de densidade e dominância relativa, isto é, o VCi é soma de DRi e DoRi de cada espécie:
+𝑉𝐶𝑖=𝐷𝑅𝑖+𝐷𝑜𝑅𝑖
+- Araucaria angustifolia
+```{r}
+VCi <- DRi(x = FOM$Especie, A = 0.3) + DoRi(data=FOM, A=0.3) 
+VCi
+```
+
+Porcentagem de cobertura (PCi): Por extensão, pode-se obter a porcentagem de cobertura da i-ésima espécie fazendo-se a média de DRi e DoRi:
+𝑃𝐶𝑖=(𝐷𝑅𝑖+𝐷𝑜𝑅𝑖)/2
+- Araucaria angustifolia
+```{r}
+PCi <- (DRi(x = FOM$Especie, A = 0.3) + DoRi(data=FOM, A=0.3))/2 
+PCi
+```
+
+Valor de importância (VIi): O valor de importância integra os parâmetros de densidade, dominância e frequência relativa, isto é, o VIi é soma de DRi, DoRi e FRi de cada espécie:
+𝑉𝐼𝑖=𝐷𝑅𝑖+𝐷𝑜𝑅𝑖+𝐹𝑅𝑖
+- Araucaria angustifolia
+```{r}
+VIi <- DRi(x = FOM$Especie, A = 0.3) + DoRi(data=FOM, A=0.3) + FRi(data=FOM) 
+VIi
+```
+
+Porcentagem de importância (PIi): Por extensão, pode-se obter a porcentagem de importância da i-ésima espécie fazendo-se a média de DRi, DoRi e FRi:
+𝑃𝐼𝑖=(𝐷𝑅𝑖+𝐷𝑜𝑅𝑖+𝐹𝑅𝑖)/3
+- Araucaria angustifolia
+```{r}
+PIi <- (DRi(x = FOM$Especie, A = 0.3) + DoRi(data=FOM, A=0.3) + FRi(data=FOM))/3 
+PIi
+```
+
+Inicialmente, para melhor compreensão dos cálculos os parâmetros da estrutura horizontal foram obtidos apenas para a espécie Araucaria angustifolia. Porém, é possível obter todas as estimativas criando-se apenas uma única função no ambiente R. A seguir é apresentada uma função genérica para obter os parâmetros fitossociológicos da estrutura horizontal. A função EH recebe quatro parâmetros: species = vetor contendo as espécies inventariadas; sample = vetor indicando as parcelas de ocorrência das espécies; d = vetor com diâmetro das árvores; e A = escalar indicando a área total amostrada:
+```{r}
+# Uma função para calcular todas as espécies
+EH <- function(species, sample, d, A, ...) {
+  DT <- data.table(species = species, sample = sample, d = d)
+  DT[, `:=`(gi = pi * d^2 / 40000)]
+    Ui <- unique(DT, by = c("species", "sample"))[, .(Ui = .N), by = "species"][order(species)]
+  ni <- DT[, .(ni = .N, Gi = sum(gi)), by = "species"]
+  ni <- ni[Ui, on = "species"]
+  EH <- ni[, DAi := ni / A
+          ][, DRi := (DAi / sum(DAi)) * 100
+            ][, DoAi := Gi / A
+              ][, DoRi := (DoAi / sum(DoAi)) * 100
+                ][, VCi := DRi + DoRi
+                  ][, PCi := VCi / 2
+                    ][, FAi := (Ui / length(unique(DT$sample))) * 100
+                      ][, FRi := (FAi / sum(FAi)) * 100
+                        ][, VIi := DRi + DoRi + FRi
+                          ][, PIi := VIi / 3][order(-VIi)]
+  
+  return(EH)
+}
+EH <- EH(species = FOM$Especie, sample = FOM$Parcela, d = FOM$DAP, A = 0.3)
+print(EH)
+```
